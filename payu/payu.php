@@ -75,12 +75,42 @@ class PayU extends PaymentModule
             Configuration::updateValue('SANDBOX_PAYU_MC_SIGNATURE_KEY', '') &&
             Configuration::updateValue('SANDBOX_PAYU_MC_OAUTH_CLIENT_ID', '') &&
             Configuration::updateValue('SANDBOX_PAYU_MC_OAUTH_CLIENT_SECRET', '') &&
-            Configuration::updateValue('PAYU_PAYMENT_STATUS_PENDING', $this->addNewOrderState('PAYU_PAYMENT_STATUS_PENDING',
-                ['en' => 'PayU payment pending', 'pl' => 'Płatność PayU rozpoczęta', 'cs' => 'Transakce PayU je zahájena'])) &&
-            Configuration::updateValue('PAYU_PAYMENT_STATUS_SENT', $this->addNewOrderState('PAYU_PAYMENT_STATUS_SENT',
-                ['en' => 'PayU payment waiting for confirmation', 'pl' => 'Płatność PayU oczekuje na odbiór', 'cs' => 'Transakce  čeká na přijetí'])) &&
-            Configuration::updateValue('PAYU_PAYMENT_STATUS_CANCELED', $this->addNewOrderState('PAYU_PAYMENT_STATUS_CANCELED',
-                ['en' => 'PayU payment canceled', 'pl' => 'Płatność PayU anulowana', 'cs' => 'Transakce PayU zrušena'])) &&
+            Configuration::updateValue(
+				'PAYU_PAYMENT_STATUS_PENDING',
+				$this->addNewOrderState(
+					'PAYU_PAYMENT_STATUS_PENDING',
+					[
+						'en' => 'PayU payment pending',
+						'pl' => 'Płatność PayU rozpoczęta',
+						'cs' => 'Transakce PayU je zahájena'
+					],
+					'PayU payment pending'
+				)
+			) &&
+            Configuration::updateValue(
+				'PAYU_PAYMENT_STATUS_SENT',
+				$this->addNewOrderState(
+					'PAYU_PAYMENT_STATUS_SENT',
+					[
+						'en' => 'PayU payment waiting for confirmation',
+						'pl' => 'Płatność PayU oczekuje na odbiór',
+						'cs' => 'Transakce  čeká na přijetí'
+					],
+					'PayU payment waiting for confirmation'
+				)
+			) &&
+            Configuration::updateValue(
+				'PAYU_PAYMENT_STATUS_CANCELED',
+				$this->addNewOrderState(
+					'PAYU_PAYMENT_STATUS_CANCELED',
+                	[
+						'en' => 'PayU payment canceled',
+						'pl' => 'Płatność PayU anulowana',
+						'cs' => 'Transakce PayU zrušena'
+					],
+					'PayU payment canceled'
+				)
+			) &&
             Configuration::updateValue('PAYU_PAYMENT_STATUS_COMPLETED', 2) &&
             Configuration::updateValue('PAYU_REPAY', 0) &&
             Configuration::updateValue('PAYU_SANDBOX', 0) &&
@@ -2351,16 +2381,22 @@ class PayU extends PaymentModule
      *
      * @return bool
      */
-    public function addNewOrderState($state, $names)
+    public function addNewOrderState($state, $names, $defaultName)
     {
         if (!(Validate::isInt(Configuration::get($state)) && Validate::isLoadedObject($order_state = new OrderState(Configuration::get($state))))) {
             $order_state = new OrderState();
+			$order_state->name = [];
+            
+			$languages = Language::getLanguages(false);
 
-            if (!empty($names)) {
-                foreach ($names as $code => $name) {
-                    $order_state->name[Language::getIdByIso($code)] = $name;
-                }
-            }
+			foreach ($languages as $language) {
+				if(array_key_exists($language['iso_code'], $names)){
+					$order_state->name[$language['id_lang']] = $names[$language['iso_code']];
+				}else{
+					$order_state->name[$language['id_lang']] = $defaultName;
+				}
+			}
+			
             $order_state->send_email = false;
             $order_state->invoice = false;
             $order_state->unremovable = true;
