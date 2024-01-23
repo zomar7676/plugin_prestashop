@@ -2355,7 +2355,7 @@ class PayU extends PaymentModule
     {
         if (!(Validate::isInt(Configuration::get($state)) && Validate::isLoadedObject($order_state = new OrderState(Configuration::get($state))))) {
             $order_state = new OrderState();
-
+	    $order_state->name = [];
             if (!empty($names)) {
                 foreach ($names as $code => $name) {
                     $order_state->name[Language::getIdByIso($code)] = $name;
